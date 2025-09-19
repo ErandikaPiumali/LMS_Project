@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
  export  function createUser(req,res){
     const passwordHash = bcrypt.hashSync(req.body.password,10);
 
+
+
     const allowedFields = [
       "firstName","lastName","userName","gender","email","phoneNo",
       "role","guardianName","classLevel","schoolName","parentEmail","parentPhoneNo","address"
@@ -27,17 +29,23 @@ userData.role = userData.role || "Student";
 		.then(() => {
 			res.json({
 				message: "User created successfully",
+        user,
 			});
 		})
-		.catch(() => {
-			res.json({
+		.catch((e) => {
+			res.status(400).json({
 				message: "Failed to create user",
+        e:e.message,
 			});
 		});
 }
 
 
-    export async function getUser(req,res){
+ 
+
+
+ 
+   export async function getUser(req,res){
      if(req.user == null){
         res.status(404).json({
             message : "User not found",

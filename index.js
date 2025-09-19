@@ -14,12 +14,11 @@ app.use(bodyParser.json())
 
 
 
-//const connectionString = "mongodb+srv://admin:78910@cluster0.kbopooi.mongodb.net/LMS?retryWrites=true&w=majority&appName=Cluster0";
 const connectionString = process.env.MONGO_URI
 
 mongoose.connect(connectionString).then(
     ()=>{
-  console.log("DataBase connected");
+  console.log("Database connected");
 }).catch(()=>{
   console.log("Failed to connect Database");
 })

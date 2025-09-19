@@ -97,7 +97,7 @@ password:{
 
 role :{
     type:String,
-    enum:["Student", "Teacher","Admin","PaymentManager","SupportTeam"],
+    enum:["Student", "Teacher","Admin","Payment Manager","Support Team"],
     required:true,
     immutable: true,
 },
@@ -109,7 +109,7 @@ profilePic:{
     type:String,
     default:"https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o="
 },
-isPhoneNoVerified:{
+isPhoneVerified:{
     type:Boolean,
     default:false,
 },
