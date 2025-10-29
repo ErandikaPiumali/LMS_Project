@@ -1,5 +1,6 @@
 import User from "../models/users.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 
  export async function createUser(req,res){
@@ -58,6 +59,42 @@ userData.role = userData.role || "Student";
 			});
 		}
   }
+
+  export function loginUser(req,res){
+ // in request body - Email and Password
+ const email = req.body.email;
+ const password = req.body.password;
+
+ User.findOne(
+  {email:email}
+ )
+ .then (
+  (User)=>{
+  if (User == null){
+    res.status(404).json({
+      message : "User not Found",
+    }); 
+   
+ 
+ }else {
+    const isPasswordCorrect= bcrypt.compareSync(password, User.password);
+    if(isPasswordCorrect){
+      res.json({
+        message:"Login successful"
+      });
+
+      }else{ 
+        res.status(403).json({
+          message:"Incorrect Password"
+        });
+      }
+    }
+  } )
+}
+  
+ 
+
+  
   
 
 
@@ -66,7 +103,7 @@ userData.role = userData.role || "Student";
 
 
  
-   export async function getUser(req,res){
+  export async function getUser(req,res){
      if(req.user == null){
         res.status(404).json({
             message : "User not found",
@@ -79,5 +116,7 @@ userData.role = userData.role || "Student";
      }
     }
 
+    
 
 
+  
