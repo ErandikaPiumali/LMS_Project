@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
+    userId: {
+    type: String,
+    unique: true,
+    immutable: true,
+  },
 firstName :{
     type:String,
     required: true,
@@ -13,7 +18,7 @@ lastName:{
     immutable: true,
 
 },
-userName:{
+/*userName:{
     type:String,
     required: true,
     unique:true,
@@ -22,7 +27,7 @@ userName:{
     immutable: true,
     lowercase:true,
 
-},
+},*/
 guardianName:{
     type:String,
     enum:["Mother","Father","Guardian"],
@@ -32,7 +37,7 @@ guardianName:{
 },
 classLevel:{
     type: String, 
-    enum: ["Grade 9", "Grade 10", "Grade 11","Grade 12","Grade 13"], 
+    enum: [ "Grade 11","Grade 12","Grade 13","Adult"], 
     required: function() {
       return this.role === "Student";
     } 
@@ -41,12 +46,12 @@ classLevel:{
 address: { 
     type: String },
 
-schoolName:{
+/*schoolName:{
     type: String,
     required: function() {
       return this.role === "Student";
     } 
-} ,   
+} ,   */
 gender:{
     type:String,
     enum:["Male","Female","Other"],
@@ -54,7 +59,7 @@ gender:{
 },
 
 
-parentEmail:{
+/*parentEmail:{
     type:String,
     trim:true,
     lowercase:true,
@@ -64,7 +69,7 @@ parentEmail:{
     } 
     
     
-},
+},*/
 parentPhoneNo:{
     type:String,
     match: [/^[0-9]{10}$/, "Please enter valid phone number"],  
@@ -97,7 +102,7 @@ password:{
 
 role :{
     type:String,
-    enum:["Student", "Teacher","Admin","Payment Manager","Support Team"],
+    enum:["Student", "Teacher","Admin","Payment Manager","Assistant"],
     required:true,
     immutable: true,
 },
