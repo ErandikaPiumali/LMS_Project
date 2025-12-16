@@ -18,22 +18,21 @@ lastName:{
     immutable: true,
 
 },
-/*userName:{
-    type:String,
-    required: true,
-    unique:true,
-    trim:true,
-    minlength:8,
-    immutable: true,
-    lowercase:true,
 
-},*/
-guardianName:{
+guardianType:{
     type:String,
     enum:["Mother","Father","Guardian"],
    required: function() {
-      return this.role === "Student";
+      return this.role === "Student" && this.classLevel !== "Adult";
     } 
+},
+guardianName :{
+    type:String,
+    required: true,
+    required: function() {
+      return this.role === "Student" && this.classLevel !== "Adult";
+    } 
+  
 },
 classLevel:{
     type: String, 
@@ -46,12 +45,7 @@ classLevel:{
 address: { 
     type: String },
 
-/*schoolName:{
-    type: String,
-    required: function() {
-      return this.role === "Student";
-    } 
-} ,   */
+
 gender:{
     type:String,
     enum:["Male","Female","Other"],
@@ -59,22 +53,11 @@ gender:{
 },
 
 
-/*parentEmail:{
-    type:String,
-    trim:true,
-    lowercase:true,
-     match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
-     required: function() {
-      return this.role === "Student";
-    } 
-    
-    
-},*/
-parentPhoneNo:{
+guardianPhoneNo:{
     type:String,
     match: [/^[0-9]{10}$/, "Please enter valid phone number"],  
     required: function() {
-      return this.role === "Student";
+      return this.role === "Student" && this.classLevel !== "Adult";
     }   
 },
 phoneNo:{

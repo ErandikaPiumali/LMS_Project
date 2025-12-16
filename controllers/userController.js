@@ -1,16 +1,31 @@
 import User from "../models/users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 
  export async function createUser(req,res){
+ // console.log(req.User)
+ if(req.User==null){
+  res.status(403).json({
+    message:"Please login"
+  })
+  return
+ }
+ if(req.User.role != "Admin"){
+  res.status(403).json({
+    message:"Please login as admin to create users"
+  })
+  return
+ }
   try{
 
     const passwordHash = bcrypt.hashSync(req.body.password,10);
 
        const allowedFields = [
       "firstName","lastName","gender","email","phoneNo",
-      "role","guardianName","classLevel","parentPhoneNo","address"
+      "role","guardianName","classLevel","guardinPhoneNo","address","guardianPhoneNo","guardianType"
     ];
 
     const userData ={};
@@ -60,6 +75,9 @@ userData.role = userData.role || "Student";
 		}
   }
 
+
+
+
   export function loginUser(req,res){
  // in request body - Email and Password
  const email = req.body.email;
@@ -70,24 +88,42 @@ userData.role = userData.role || "Student";
  )
  .then (
   (User)=>{
+   
   if (User == null){
-    res.status(404).json({
+    res.status(404).json
+    ({
       message : "User not Found",
-    }); 
+    })
+  
+  return;
    
  
  }else {
     const isPasswordCorrect= bcrypt.compareSync(password, User.password);
-    if(isPasswordCorrect){
-      res.json({
-        message:"Login successful"
-      });
 
-      }else{ 
+    if(isPasswordCorrect){
+     const token = jwt.sign(
+     {
+      email:User.email,
+     firstName : User.firstName,
+      lastName : User.lastName,
+      role:User.role,
+      isBlocked:User.isBlocked,
+      isEmailVerified:User.isEmailVerified
+      
+     },
+     process.env.JWT_SECRET,
+  { expiresIn: "1h" },
+ )
+  
+  res.json({
+    token:token,
+    message:"Login Successful"
+  })
+      }else
         res.status(403).json({
-          message:"Incorrect Password"
-        });
-      }
+          message:"Incorrect password"
+        })
     }
   } )
 }
