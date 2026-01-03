@@ -137,7 +137,7 @@ userData.role = userData.role || "Student";
 }
   
  
-  // View users
+  // View users- only admin- filter
  export async function getUsers(req,res){
     try{
 
@@ -167,6 +167,33 @@ userData.role = userData.role || "Student";
     }
   }
 
+  //Delete users
+  export async function deleteUsers(req,res){
+    
+        if (!isAdmin(req)) {
+         res.status(403).json({
+          message:"Access denied.Admin only!!!"
+        })
+        return;
+      }
+      try{
+      const userId = req.params.userId;
+      await User.deleteOne({
+        userId : userId,
+      })
+      
+       res.status(200).json({
+         message: `User ${userId} deleted successfully.` })
+      } catch (error) {
+        console.error("Error deleting User; ",error);
+        res.status(500).json({ message: "Failed to delete user." });
+        return;
+    }
+
+
+    }
+
+  
     
 
 
