@@ -5,20 +5,28 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
+//Is Admin?
+export function isAdmin(req){
+  if(req.User == null){
+    return false;
+  }
+  if(req.User.role =="Admin"){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+
+//Create users - only admin
  export async function createUser(req,res){
- // console.log(req.User)
- if(req.User==null){
-  res.status(403).json({
-    message:"Please login"
-  })
-  return
- }
- if(req.User.role != "Admin"){
-  res.status(403).json({
+
+if(!isAdmin(req)){
+  return res.status(403).json({
     message:"Please login as admin to create users"
   })
-  return
- }
+  
+} 
   try{
 
     const passwordHash = bcrypt.hashSync(req.body.password,10);
@@ -77,7 +85,7 @@ userData.role = userData.role || "Student";
 
 
 
-
+// Users login
   export function loginUser(req,res){
  // in request body - Email and Password
  const email = req.body.email;
@@ -129,28 +137,35 @@ userData.role = userData.role || "Student";
 }
   
  
+  // View users
+ export async function getUsers(req,res){
+    try{
 
-  
-  
+       if (!isAdmin(req)) {
+        return res.status(403).json({
+          message:"Access denied.Admin only!!!"
+        })
+      }
 
+      const{userId, role, isBlocked} = req.query;
 
+      const filter={};
+      if(userId)filter.userId = userId;
+      if(role)filter.role =role;
+  if (isBlocked === "true") filter.isBlocked = true;
+  if (isBlocked === "false") filter.isBlocked = false;
 
- 
+  const users = await User.find(filter).select("-password"); // filter details without password
 
-
- 
-  export async function getUser(req,res){
-     if(req.user == null){
-        res.status(404).json({
-            message : "User not found",
-           
-
-        });
-     } else{
-        console.log(req.user);
-        res.json(req.body);
-     }
+  return res.json(users);
+} 
+ catch(error){
+      console.log("Error fetching users : ", error);
+      return res.status(500).json({
+        message:"Failed to fetch users"
+      })
     }
+  }
 
     
 
