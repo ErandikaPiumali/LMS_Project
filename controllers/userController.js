@@ -167,7 +167,7 @@ userData.role = userData.role || "Student";
     }
   }
 
-  //Delete users
+  //Delete users - only admin
   export async function deleteUsers(req,res){
     
         if (!isAdmin(req)) {
@@ -192,6 +192,65 @@ userData.role = userData.role || "Student";
 
 
     }
+
+  // Edit user data - only admin
+  export async function editUsers(req,res){
+    if(!isAdmin(req)){
+      res.status(403).json({
+        message:"Access denied.Admin only!!!"
+      })
+      return;
+    }
+    try{
+      const userId= req.param.userId;
+
+      const allowedFields = [
+      "firstName",
+      "lastName",
+      "gender",
+      "email",
+      "phoneNo",
+      "role",
+      "guardianName",
+      "classLevel",
+      "guardianPhoneNo",
+      "address",
+      "guardianType",
+      "isBlocked",
+      "isEmailVerified"
+    ];
+
+    const updatedData = {};
+    allowedFields.forEach (findFields=>{
+      if( req.body[findFields] !== undefined){
+        updatedData[findFields] = req.body[findFields]
+      }
+    })
+    if (req.body.password) {
+      updatedData.password = bcrypt.hashSync(req.body.password, 10);
+
+    }
+     const updatedUser = await User.findOneAndUpdate(
+      { userId },
+      updatedData,
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+    return res.json({
+      message: `User ${userId} updated successfully`,updatedUser
+      
+    });
+
+  }catch(error){
+return res.status(500).json({
+  message : "Failed to updaet user ", error:error.message
+})
+  }
+
+    }
+    
 
   
     
