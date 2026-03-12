@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import userRouter from "./routers/userRouter.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import courseRouter from "./routers/courseRouter.js";
 dotenv.config()
 
  
@@ -58,7 +59,8 @@ mongoose.connect(connectionString).then(
 
         
 
-app.use("/users",userRouter)
+app.use("/api/users",userRouter);
+app.use("/api/courses",courseRouter)
 
 
 app.listen(5000,()=>{

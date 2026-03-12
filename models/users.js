@@ -114,7 +114,7 @@ notifications: {
   sms: { type: Boolean, default: false },
 },
 
-paymentHistory: [
+/*paymentHistory: [
   {
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
@@ -126,7 +126,7 @@ paymentHistory: [
    
   }
   
-]
+]*/
 
 })
 

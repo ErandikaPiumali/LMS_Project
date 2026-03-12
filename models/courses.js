@@ -66,10 +66,7 @@ default:null
      default:"http://via.placeholder.com/400x225?text=course"
     },
 
-    syllabus:{
-      type:String,
-      default:null
-    },
+  
     courseStatus:{
       type:String,
       enum:["Draft","Published","Archived"],
@@ -119,7 +116,7 @@ averageRating:{
 },
 
 tags:[{
-  type:string,
+  type:String,
   trim:true
 }]
 

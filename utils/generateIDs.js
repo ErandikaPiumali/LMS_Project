@@ -6,27 +6,28 @@ const currentPrefix = `${prefix}${year}-`;
 
 const lastDoc = await model.findOne(
     {
-      // find field that contains this prefix
-      // works for userId, courseId, sectionId, resourceId
+      
       $or: [
         { userId: { $regex: `^${currentPrefix}` } },
-        //{ courseId: { $regex: `^${currentPrefix}` } },
+        { courseId: { $regex: `^${currentPrefix}` } },
+         { enrollmentId: { $regex: `^${currentPrefix}` } },
        // { sectionId: { $regex: `^${currentPrefix}` } },
         //{ resourceId: { $regex: `^${currentPrefix}` } },
       ],
     },
     null,
-    { sort: { _id: -1 } } // get the most recently created one
+    { sort: { _id: -1 } } 
   );
 
   if (!lastDoc) {
-    // No document exists with this prefix yet → start from 0001
+    
     return `${currentPrefix}0001`;
   }
 
   const lastId =
-    lastDoc.userId 
-  //  || lastDoc.courseId ||
+    lastDoc.userId||
+     lastDoc.courseId ||
+     lastDoc.enrollmentId
   //  lastDoc.sectionId ||
    // lastDoc.resourceId;
 
@@ -43,5 +44,12 @@ export const rolePrefixes = {
   Admin: "AD",
   "Payment Manager": "PM",
   Assistant: "AS",
+};
+
+export const collectionPrefixes = {
+  Course: "CR",
+  Section: "SC",
+  Resource: "RS",
+  Enrollment: "EN",   
 };
 
