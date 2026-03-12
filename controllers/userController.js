@@ -2,6 +2,8 @@ import User from "../models/users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { generateId, rolePrefixes } from "../utils/generateIDs.js";
+
 dotenv.config();
 
 
@@ -11,6 +13,18 @@ export function isAdmin(req){
     return false;
   }
   if(req.User.role =="Admin"){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+// Is verified User?
+export function isVerifiedUser(req,targetUserId){
+  if(!req.User){
+    return false;
+  }
+  if(req.User.isEmailVerified && !req.User.isBlocked  &&  req.User.userId==req.body.targetUserId){
     return true;
   }else{
     return false;
@@ -33,7 +47,7 @@ if(!isAdmin(req)){
 
        const allowedFields = [
       "firstName","lastName","gender","email","phoneNo",
-      "role","guardianName","classLevel","guardinPhoneNo","address","guardianPhoneNo","guardianType"
+      "role","guardianName","classLevel","address","guardianPhoneNo","guardianType"
     ];
 
     const userData ={};
@@ -46,21 +60,10 @@ if(!isAdmin(req)){
 userData.role = userData.role || "Student";
     userData.password = passwordHash;
 
-  const rolePrefixes = {
-  Student: "ST",
-  Teacher: "TC",
-  Admin: "AD",
-  "Payment Manager": "PM",
-  Assistant: "AS"
-};
+  
 
-    const count = await User.countDocuments();
-    
-    const fullYear= new Date().getFullYear();
-    const year = fullYear.toString().slice(-2);
-
-    const prefix = rolePrefixes[userData.role] 
-   userData.userId = `${prefix}${year}-${(count + 1).toString().padStart(4, "0")}`;
+    const prefix = rolePrefixes[userData.role];
+    userData.userId = await generateId(User, prefix);
 
 
     const user = new User(userData);
@@ -102,6 +105,16 @@ userData.role = userData.role || "Student";
     ({
       message : "User not Found",
     })
+      //  Password expiration check
+    const PASSWORD_EXPIRATION_DAYS = 90;
+    const now = new Date();
+    const passwordAgeDays = (now - User.passwordLastUpdated) / (1000 * 60 * 60 * 24);
+
+    if (passwordAgeDays > PASSWORD_EXPIRATION_DAYS) {
+      return res.status(403).json({
+        message: `Your password has expired. Please update your password before logging in.`
+      });
+    }
   
   return;
    
@@ -157,12 +170,20 @@ userData.role = userData.role || "Student";
 
   const users = await User.find(filter).select("-password"); // filter details without password
 
+   if (!users || users.length === 0) {
+      return res.status(404).json({
+        message: userId
+          ? `No user found with ID ${userId}`
+          : "No users found "
+      });
+    }
+
   return res.json(users);
 } 
  catch(error){
       console.log("Error fetching users : ", error);
       return res.status(500).json({
-        message:"Failed to fetch users"
+        message:"Failed to find users"
       })
     }
   }
@@ -178,9 +199,14 @@ userData.role = userData.role || "Student";
       }
       try{
       const userId = req.params.userId;
-      await User.deleteOne({
-        userId : userId,
+     const result = await User.deleteOne({
+        userId 
       })
+        if (result.deletedCount === 0) {
+      return res.status(404).json({
+        message: `User ${userId} not found.`
+      });
+    }
       
        res.status(200).json({
          message: `User ${userId} deleted successfully.` })
@@ -193,7 +219,7 @@ userData.role = userData.role || "Student";
 
     }
 
-  // Edit user data - only admin
+  // Edit all user data - only admin
   export async function editUsers(req,res){
     if(!isAdmin(req)){
       res.status(403).json({
@@ -202,7 +228,7 @@ userData.role = userData.role || "Student";
       return;
     }
     try{
-      const userId= req.param.userId;
+      const userId= req.params.userId;
 
       const allowedFields = [
       "firstName",
@@ -245,12 +271,61 @@ userData.role = userData.role || "Student";
 
   }catch(error){
 return res.status(500).json({
-  message : "Failed to updaet user ", error:error.message
+  message : "Failed to update user ", error:error.message
 })
   }
 
     }
     
+    //edit own user details - other users
+export async function editOwnDetails(req,res){
+  if(!isVerifiedUser(req)){
+      res.status(403).json({
+        message:"You are not verified User!!!"
+      })
+      return;
+    }
+       try{
+      const userId= req.params.userId;
+
+      const allowedUserFields = [
+      "email",
+      "phoneNo",
+      "guardianPhoneNo",
+      "address",
+    ];
+    const updatedData = {};
+
+    allowedUserFields.forEach (findUserFields=>{
+      if( req.body[findUserFields] !== undefined){
+        updatedData[findUserFields] = req.body[findUserFields]
+      }
+    })
+
+    if (req.body.password) {
+      updatedData.password = bcrypt.hashSync(req.body.password, 10);
+       updatedData.passwordLastUpdated = new Date(); 
+
+    }
+      const updatedUser = await User.findOneAndUpdate(
+      { userId },
+      updatedData,
+      { new: true }
+    ).select("-password");
+
+    return res.json({
+      message: `Your account has been updated successfully`,
+      updatedUser
+    });
+
+  } catch (error) {
+    console.error("Error updating your account:", error);
+    return res.status(500).json({ message: "Failed to update your account", error: error.message });
+  }
+}
+
+    
+
 
   
     

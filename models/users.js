@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { CLASS_LEVELS } from "../utils/modelSchemas.js";
+
 
 const userSchema = new mongoose.Schema({
     userId: {
@@ -36,7 +38,7 @@ guardianName :{
 },
 classLevel:{
     type: String, 
-    enum: [ "Grade 11","Grade 12","Grade 13","Adult"], 
+    enum:CLASS_LEVELS, 
     required: function() {
       return this.role === "Student";
     } 
@@ -63,7 +65,7 @@ guardianPhoneNo:{
 phoneNo:{
     type:String,
     required:true,
-    unique:true,
+   // unique:true,
    match: [/^[0-9]{10}$/, "Please enter valid phone number"],
    
 },
@@ -127,6 +129,7 @@ paymentHistory: [
 ]
 
 })
+
 
 const User = mongoose.model("users",userSchema);
 export default User;

@@ -24,8 +24,10 @@ app.use(
     token,
     process.env.JWT_SECRET,
     (err,decoded)=>{
+      
       if(decoded==null){
-        res.status(403).json({
+
+    return   res.status(403).json({
           message:"Unauthorized"
         })
       }else{
