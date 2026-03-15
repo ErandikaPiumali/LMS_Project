@@ -1,7 +1,6 @@
+import { isAdmin} from "../middleware/authMiddleware.js";
 import Courses from "../models/courses.js";
 import { collectionPrefixes, generateId } from "../utils/generateIDs.js";
-import { isAdmin } from "./userController.js";
-
 
 export async function createCourse(req,res){
 
@@ -56,3 +55,64 @@ return res.status(403).json({
 
     }
 }
+
+
+
+export async function getCourses(req,res) {
+
+try{
+    const {subject,classLevel,courseStatus,mode,teacherId,teacherName}=req.query;
+    let filter={};
+   
+    if (!isAdmin(req)){
+
+   filter.courseStatus = "Published";
+   if (teacherName) {                 
+    const teacher = await User.findOne({
+      firstName: { $regex: teacherName, $options: "i" },
+      role: "Teacher"
+    });
+    if (teacher) filter.teacherId = teacher.userId;
+    }
+}
+
+   else{
+     if (courseStatus) filter.courseStatus = courseStatus;
+   if (teacherId) filter.teacherId = teacherId; 
+  }
+
+
+
+if(subject) filter.subject =subject;
+if(classLevel) filter.classLevel=classLevel;
+if(mode) filter.mode=mode;
+
+const courses = await Courses.find(filter);
+
+if(!courses||courses.length===0){
+    return res.status(404).json({
+       message: "No courses found"
+    });
+}
+
+return res.json(courses);
+
+}
+    
+catch(error){
+    console.error("Error fetching course details",error);
+    return res.status(500).json({
+        message:"Failed to fetch courses"
+       
+    });
+
+}
+}
+
+export async function getCoursesById(req,res){
+// filter courseIds and give details 
+//give all details if enrolled
+
+}
+
+

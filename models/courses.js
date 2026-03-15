@@ -12,6 +12,7 @@ const coursesSchema = new mongoose.Schema({
    courseTitle:{
     type:String,
     required:true,
+    unique:true,
     trim:true
   },
 
@@ -66,16 +67,16 @@ default:null
      default:"http://via.placeholder.com/400x225?text=course"
     },
 
-  
+  classTime: {
+  type: String,
+  default: null  
+},
     courseStatus:{
       type:String,
-      enum:["Draft","Published","Archived"],
+      enum:["Draft","Published","Archived","Suspended"],
       default:"Draft"
     },
-    isCourseBlocked:{
-      type:Boolean,
-      default:false
-    },
+   
     mode:{
       type:String,
       enum:[

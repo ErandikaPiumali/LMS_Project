@@ -3,37 +3,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { generateId, rolePrefixes } from "../utils/generateIDs.js";
-
+import { isAdmin, isVerifiedUser } from "../middleware/authMiddleware.js";
 dotenv.config();
 
 
-//Is Admin?
-export function isAdmin(req){
-  if(req.User == null){
-    return false;
-  }
-  if(req.User.role =="Admin"){
-    return true;
-  }else{
-    return false;
-  }
-}
-
-// Is verified User?
-export function isVerifiedUser(req,targetUserId){
-  if(!req.User){
-    return false;
-  }
-  if(req.User.isEmailVerified && !req.User.isBlocked  &&  req.User.userId==req.body.targetUserId){
-    return true;
-  }else{
-    return false;
-  }
-}
-
-
-//Create users - only admin
- export async function createUser(req,res){
+export async function createUser(req,res){
 
 if(!isAdmin(req)){
   return res.status(403).json({
@@ -60,37 +34,32 @@ if(!isAdmin(req)){
 userData.role = userData.role || "Student";
     userData.password = passwordHash;
 
-  
-
     const prefix = rolePrefixes[userData.role];
     userData.userId = await generateId(User, prefix);
 
-
     const user = new User(userData);
-
-		 const savedUser = await user.save();
-
-		
-			res.json({
+    const savedUser = await user.save();
+res.json({
 				message: "User with UserID " + userData.userId +" created successfully",
         savedUser
 			});
 		
 		} 
-    catch(e)  {
-      console.error("Error creating User", e);
+
+    catch(error)  {
+      console.error("Error creating User", error);
 			res.status(400).json({
 				message: "Failed to create user",
-        error:e.message,
+        error:error.message,
 			});
 		}
   }
 
 
 
-// Users login
+
   export function loginUser(req,res){
- // in request body - Email and Password
+ 
  const email = req.body.email;
  const password = req.body.password;
 
@@ -103,7 +72,7 @@ userData.role = userData.role || "Student";
   if (User == null){
     res.status(404).json
     ({
-      message : "User not Found",
+      message : "User not Found"
     })
       //  Password expiration check
     const PASSWORD_EXPIRATION_DAYS = 90;
@@ -112,7 +81,7 @@ userData.role = userData.role || "Student";
 
     if (passwordAgeDays > PASSWORD_EXPIRATION_DAYS) {
       return res.status(403).json({
-        message: `Your password has expired. Please update your password before logging in.`
+        message: "Your password has expired. Please update your password before logging in."
       });
     }
   
@@ -150,7 +119,7 @@ userData.role = userData.role || "Student";
 }
   
  
-  // View users- only admin- filter
+  
  export async function getUsers(req,res){
     try{
 
@@ -160,11 +129,11 @@ userData.role = userData.role || "Student";
         })
       }
 
-      const{userId, role, isBlocked} = req.query;
+  const{userId, role, isBlocked} = req.query;
+  const filter={};
 
-      const filter={};
-      if(userId)filter.userId = userId;
-      if(role)filter.role =role;
+  if(userId) filter.userId = userId;
+  if(role)   filter.role =role;
   if (isBlocked === "true") filter.isBlocked = true;
   if (isBlocked === "false") filter.isBlocked = false;
 
@@ -172,23 +141,24 @@ userData.role = userData.role || "Student";
 
    if (!users || users.length === 0) {
       return res.status(404).json({
-        message: userId
-          ? `No user found with ID ${userId}`
-          : "No users found "
+        message:"No users found "
       });
     }
 
   return res.json(users);
 } 
+
  catch(error){
       console.log("Error fetching users : ", error);
       return res.status(500).json({
-        message:"Failed to find users"
+        message:"Failed to find users",
+        error:error.message
       })
     }
   }
 
-  //Delete users - only admin
+ 
+
   export async function deleteUsers(req,res){
     
         if (!isAdmin(req)) {
@@ -197,6 +167,7 @@ userData.role = userData.role || "Student";
         })
         return;
       }
+
       try{
       const userId = req.params.userId;
      const result = await User.deleteOne({
@@ -212,14 +183,16 @@ userData.role = userData.role || "Student";
          message: `User ${userId} deleted successfully.` })
       } catch (error) {
         console.error("Error deleting User; ",error);
-        res.status(500).json({ message: "Failed to delete user." });
+        res.status(500).json({
+           message: "Failed to delete user.",
+          error:error.message });
         return;
     }
 
 
     }
 
-  // Edit all user data - only admin
+  
   export async function editUsers(req,res){
     if(!isAdmin(req)){
       res.status(403).json({
@@ -271,7 +244,8 @@ userData.role = userData.role || "Student";
 
   }catch(error){
 return res.status(500).json({
-  message : "Failed to update user ", error:error.message
+  message : "Failed to update user ",
+   error:error.message
 })
   }
 
@@ -320,7 +294,9 @@ export async function editOwnDetails(req,res){
 
   } catch (error) {
     console.error("Error updating your account:", error);
-    return res.status(500).json({ message: "Failed to update your account", error: error.message });
+    return res.status(500).json({
+       message: "Failed to update your account",
+       error: error.message });
   }
 }
 
