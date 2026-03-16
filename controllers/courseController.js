@@ -1,4 +1,4 @@
-import { isAdmin} from "../middleware/authMiddleware.js";
+import { isAdmin, isTeacher} from "../middleware/authMiddleware.js";
 import Courses from "../models/courses.js";
 import { collectionPrefixes, generateId } from "../utils/generateIDs.js";
 
@@ -81,8 +81,6 @@ try{
    if (teacherId) filter.teacherId = teacherId; 
   }
 
-
-
 if(subject) filter.subject =subject;
 if(classLevel) filter.classLevel=classLevel;
 if(mode) filter.mode=mode;
@@ -109,10 +107,108 @@ catch(error){
 }
 }
 
-export async function getCoursesById(req,res){
+
+
+export async function deleteCourse(req,res){
+    if(!isAdmin(req)){
+        res.status(403).json({
+            message:"Access denied. Admin only"
+        })
+        return;
+    }
+   try {
+    const courseId=req.params.courseId;
+    await Courses.deleteOne({
+        courseId:courseId
+    })
+    res.json({
+        message:"Course deleted successfully"
+    })
+
+    }
+    catch(error){
+        console.error("Error deleting course",error)
+        res.status(500).json({
+            message:"Failed to delete course"
+        })
+        return;
+
+    }
+}
+
+
+
+export async function getCoursesById(){
 // filter courseIds and give details 
 //give all details if enrolled
 
+}
+
+
+export async function updateCourse(req, res) {
+  try {
+    const { courseId } = req.params;
+
+    // 1. Find the course
+    const course = await Courses.findOne({ courseId });
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const updateData = {};
+
+    if (isTeacher(req)) {
+      // 2. Check ownership
+      if (course.teacherId !== req.User.userId) {
+        return res.status(403).json({ message: "You are not allowed to update this course" });
+      }
+
+      // 3. Teacher allowed fields
+      const teacherFields = [
+        "courseDescription", "maxStudents", "courseFee",
+        "courseImage", "classTime", "mode", "tags", "assistantId"
+      ];
+      teacherFields.forEach(field => {
+        if (req.body[field] !== undefined) updateData[field] = req.body[field];
+      });
+
+    } else if (isAdmin(req)) {
+      // 4. Admin allowed fields
+      const adminFields = [
+        "courseDescription", "maxStudents", "courseFee", "courseImage",
+        "classTime", "mode", "tags", "assistantId", "classLevel",
+        "courseStatus", "teacherId"
+      ];
+      adminFields.forEach(field => {
+        if (req.body[field] !== undefined) updateData[field] = req.body[field];
+      });
+
+      // 5. Title and subject only allowed in Draft
+      if (course.courseStatus === "Draft") {
+        if (req.body.courseTitle) updateData.courseTitle = req.body.courseTitle;
+        if (req.body.subject) updateData.subject = req.body.subject;
+      }
+
+    } else {
+      return res.status(403).json({ message: "You are not allowed to update courses" });
+    }
+
+    // 6. Save
+    const updatedCourse = await Courses.findOneAndUpdate(
+      { courseId },
+      updateData,
+      { new: true }
+    );
+
+    return res.json({
+      message: `Course ${courseId} updated successfully`,
+      updatedCourse
+    });
+
+  } catch (error) {
+    console.error("Error updating course:", error);
+    return res.status(500).json({ message: "Failed to update course" });
+  }
 }
 
 
