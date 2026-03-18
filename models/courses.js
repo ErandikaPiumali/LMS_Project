@@ -5,7 +5,9 @@ const coursesSchema = new mongoose.Schema({
   courseId:{
     type:String,
     unique:true,
-    immutable:true
+    immutable:true,
+    required:true
+
 
   },
 
@@ -35,7 +37,7 @@ const coursesSchema = new mongoose.Schema({
   },
   maxStudents:{
 type:Number,
-default:null
+min:1
   },
 
  
@@ -53,7 +55,7 @@ default:null
   courseFee:{
     type:Number,
     required:true,
-    min:0 //No negative
+    min:0 
   },
   currency:{
     type:String,
@@ -64,13 +66,16 @@ default:null
   courseImage:
     {
       type:String,
-     default:"http://via.placeholder.com/400x225?text=course"
+     default:"https://via.placeholder.com/400x225?text=course"
     },
 
   classTime: {
   type: String,
-  default: null  
-},
+  enum: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+      },
+  startTime: { type: String },
+  endTime:   { type: String },
+    
     courseStatus:{
       type:String,
       enum:["Draft","Published","Archived","Suspended"],
@@ -84,50 +89,15 @@ default:null
       ],
       default:"Online"
     },
-courseRatings:[
-  {
-    studentId:{
-      type:String,
-      ref:"users"
-  },
-  ratings:{
-    type:Number,
-    min:1,
-    max:5,
-    required:true
-
-  },
-  review:{
-    type:String,
-    trim:true
-
-  },
-
-  createdAt:{
-    type:Date,
-    default:Date.now
-  },
-
-
-
-},],
-averageRating:{
-  type:Number,
-  default:0
-},
 
 tags:[{
   type:String,
   trim:true
-}]
+}],
+},
 
-    
-  
-
-},{timestamps:true});
-
-
-
+{timestamps:true}
+);
 
 
 const Courses = mongoose.model("courses",coursesSchema)

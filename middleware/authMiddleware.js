@@ -80,7 +80,7 @@ export function isVerifiedUser(req){
   }
   if(req.User.isEmailVerified && 
     !req.User.isBlocked  && 
-     req.User.userId==req.body.targetUserId){
+     req.User.userId==req.params.userId){
     return true;
   }else{
     return false;

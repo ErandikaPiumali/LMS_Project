@@ -73,8 +73,9 @@ res.json({
     res.status(404).json
     ({
       message : "User not Found"
-    })
-      //  Password expiration check
+    });
+  }else{
+      
     const PASSWORD_EXPIRATION_DAYS = 90;
     const now = new Date();
     const passwordAgeDays = (now - User.passwordLastUpdated) / (1000 * 60 * 60 * 24);
@@ -85,15 +86,12 @@ res.json({
       });
     }
   
-  return;
-   
- 
- }else {
-    const isPasswordCorrect= bcrypt.compareSync(password, User.password);
+  const isPasswordCorrect= bcrypt.compareSync(password, User.password);
 
     if(isPasswordCorrect){
      const token = jwt.sign(
      {
+      userId:User.userId,
       email:User.email,
      firstName : User.firstName,
       lastName : User.lastName,
@@ -114,9 +112,12 @@ res.json({
         res.status(403).json({
           message:"Incorrect password"
         })
-    }
-  } )
-}
+      }
+    //}
+  })
+  } 
+
+
   
  
   
@@ -137,7 +138,7 @@ res.json({
   if (isBlocked === "true") filter.isBlocked = true;
   if (isBlocked === "false") filter.isBlocked = false;
 
-  const users = await User.find(filter).select("-password"); // filter details without password
+  const users = await User.find(filter).select("-password"); 
 
    if (!users || users.length === 0) {
       return res.status(404).json({
@@ -251,7 +252,7 @@ return res.status(500).json({
 
     }
     
-    //edit own user details - other users
+    
 export async function editOwnDetails(req,res){
   if(!isVerifiedUser(req)){
       res.status(403).json({
@@ -288,12 +289,12 @@ export async function editOwnDetails(req,res){
     ).select("-password");
 
     return res.json({
-      message: `Your account has been updated successfully`,
+      message: "Your account has been updated successfully",
       updatedUser
     });
 
   } catch (error) {
-    console.error("Error updating your account:", error);
+    console.error("Error updating your account: ", error);
     return res.status(500).json({
        message: "Failed to update your account",
        error: error.message });

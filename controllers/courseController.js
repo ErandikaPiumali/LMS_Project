@@ -1,6 +1,7 @@
 import { isAdmin, isTeacher} from "../middleware/authMiddleware.js";
 import Courses from "../models/courses.js";
 import { collectionPrefixes, generateId } from "../utils/generateIDs.js";
+import User from "../models/users.js";
 
 export async function createCourse(req,res){
 
@@ -118,9 +119,15 @@ export async function deleteCourse(req,res){
     }
    try {
     const courseId=req.params.courseId;
-    await Courses.deleteOne({
+    const result=await Courses.deleteOne({
         courseId:courseId
     })
+      if (result.deletedCount === 0) {
+      return res.status(404).json({
+        message: `Course ${courseId} not found`
+      });
+    }
+
     res.json({
         message:"Course deleted successfully"
     })
@@ -139,6 +146,7 @@ export async function deleteCourse(req,res){
 
 
 export async function getCoursesById(){
+
 // filter courseIds and give details 
 //give all details if enrolled
 
@@ -149,7 +157,7 @@ export async function updateCourse(req, res) {
   try {
     const { courseId } = req.params;
 
-    // 1. Find the course
+    
     const course = await Courses.findOne({ courseId });
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
@@ -158,12 +166,12 @@ export async function updateCourse(req, res) {
     const updateData = {};
 
     if (isTeacher(req)) {
-      // 2. Check ownership
+     
       if (course.teacherId !== req.User.userId) {
         return res.status(403).json({ message: "You are not allowed to update this course" });
       }
 
-      // 3. Teacher allowed fields
+      
       const teacherFields = [
         "courseDescription", "maxStudents", "courseFee",
         "courseImage", "classTime", "mode", "tags", "assistantId"
@@ -173,7 +181,7 @@ export async function updateCourse(req, res) {
       });
 
     } else if (isAdmin(req)) {
-      // 4. Admin allowed fields
+      
       const adminFields = [
         "courseDescription", "maxStudents", "courseFee", "courseImage",
         "classTime", "mode", "tags", "assistantId", "classLevel",
@@ -183,17 +191,25 @@ export async function updateCourse(req, res) {
         if (req.body[field] !== undefined) updateData[field] = req.body[field];
       });
 
-      // 5. Title and subject only allowed in Draft
+      
       if (course.courseStatus === "Draft") {
+       
         if (req.body.courseTitle) updateData.courseTitle = req.body.courseTitle;
         if (req.body.subject) updateData.subject = req.body.subject;
       }
 
-    } else {
+     else {
+      if(req.body.courseTitle||req.body.subject){
+        return res.status(400).json({
+          message:"Update Unsuccessful"
+        });
+      }
+    }
+  }else{
       return res.status(403).json({ message: "You are not allowed to update courses" });
     }
 
-    // 6. Save
+    
     const updatedCourse = await Courses.findOneAndUpdate(
       { courseId },
       updateData,
