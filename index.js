@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 
 import courseRouter from "./routers/courseRouter.js";
 import { verifyToken } from "./middleware/authMiddleware.js";
+
 dotenv.config()
 
  
@@ -26,6 +27,7 @@ app.use(verifyToken);
 //Routers
 app.use("/api/users",userRouter);
 app.use("/api/courses",courseRouter);
+
 
 
 
